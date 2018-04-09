@@ -86,7 +86,7 @@ results = clf.predict(test_transformed_dict) #predict results - sparse matrix
 TP = np.zeros(90,dtype=np.int) #array with True positive values for each class
 FP = np.zeros(90,dtype=np.int) #array with False positive values for each class
 FN = np.zeros(90,dtype=np.int) #array with False negative values for each class
-
+TN = np.zeros(90,dtype=np.int) #array with True negative values for each class
 
 
 for i in range(0,3019):
@@ -102,6 +102,8 @@ for i in range(0,3019):
             FN[j] +=1
         if result == 1 and target == 0:
             FP[j] +=1
+        if result == 0 and target == 0:
+            TN[j] +=1
 
 print("earn: ")
 precision,recall = recall_precision(TP,FP,FN,21)
