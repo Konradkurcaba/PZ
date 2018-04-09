@@ -31,7 +31,12 @@ def target_matrix(docs_id):           #create target sparse matrix from given do
     new_array = scipy.sparse.csr_matrix(target_array)  # create sparse array from dense array
     return new_array
 
+def recall_precision(TP,FP,FN,index):
 
+    precision = TP[index] / (TP[index] + FP[index])
+    recall = TP[index] / (TP[index] + FN[index])
+
+    return precision,recall
 
 
 documents = reuters.fileids()
@@ -78,19 +83,18 @@ results = clf.predict(test_transformed_dict) #predict results - sparse matrix
 
 
 
-TP = np.zeros(90,dtype=np.int)
-FP = np.zeros(90,dtype=np.int)
-
-FN = np.zeros(90,dtype=np.int)
+TP = np.zeros(90,dtype=np.int) #array with True positive values for each class
+FP = np.zeros(90,dtype=np.int) #array with False positive values for each class
+FN = np.zeros(90,dtype=np.int) #array with False negative values for each class
 
 
 
 for i in range(0,3019):
-    result_row = results.getrow(i).toarray()
-    test_target_row = test_target.getrow(i).toarray()
+    result_row = results.getrow(i).toarray()  #one row from result matrix
+    test_target_row = test_target.getrow(i).toarray() #one row from target matrix
     for j in range(0,90):
-        result = np.take(result_row,j)
-        target = np.take(test_target_row,j)
+        result = np.take(result_row,j)  #value with index j
+        target = np.take(test_target_row,j) #value with index j
 
         if  result == 1  and target == 1:
             TP[j] +=1
@@ -100,16 +104,56 @@ for i in range(0,3019):
             FP[j] +=1
 
 print("earn: ")
-precision = TP[21] /( TP[21] + FP[21])
-recall = TP[21] / (TP[21] + FN[21])
+precision,recall = recall_precision(TP,FP,FN,21)
 print (precision)
 print (recall)
 
-print("corn: ")
-precision = TP[12] /( TP[12] + FP[12])
-recall = TP[12] / (TP[12] + FN[12])
+print("acq: ")
+precision,recall = recall_precision(TP,FP,FN,0)
 print (precision)
 print (recall)
+
+print("money-fx: ")
+precision,recall = recall_precision(TP,FP,FN,46)
+print (precision)
+print (recall)
+
+print("grain: ")
+precision,recall = recall_precision(TP,FP,FN,26)
+print (precision)
+print (recall)
+
+print("crude: ")
+precision,recall = recall_precision(TP,FP,FN,17)
+print (precision)
+print (recall)
+
+print("trade: ")
+precision,recall = recall_precision(TP,FP,FN,84)
+print (precision)
+print (recall)
+
+print("interest: ")
+precision,recall = recall_precision(TP,FP,FN,34)
+print (precision)
+print (recall)
+
+print("ship: ")
+precision,recall = recall_precision(TP,FP,FN,71)
+print (precision)
+print (recall)
+
+print("wheat: ")
+precision,recall = recall_precision(TP,FP,FN,86)
+print (precision)
+print (recall)
+
+
+print("corn: ")
+precision,recall = recall_precision(TP,FP,FN,12)
+print (precision)
+print (recall)
+
 
 
 
