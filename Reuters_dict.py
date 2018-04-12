@@ -34,22 +34,26 @@ def target_matrix(docs_id):           #create target sparse matrix from given do
     new_array = scipy.sparse.csr_matrix(target_array)  # create sparse array from dense array
     return new_array
 
+micro_avg_denominators = []
+micro_avg_numerators = []
+
 def recall_precision(TP,FP,FN,index):
 
     precision = TP[index] / (TP[index] + FP[index])
     p = precision
     recall = TP[index] / (TP[index] + FN[index])
     r = recall
-
     if (precision > recall):
-        p_denominator = (TP[index] + FP[index]) *2
-        r_denominator = (TP[index] + FN[index] ) *2
+        p_denominator = (TP[index] + FP[index]) *2  #save precision denominator
+        r_denominator = (TP[index] + FN[index] ) *2 #save recall denominator
         while p != r:
             p_denominator +=1
             r_denominator -=1
             p = (TP[index] *2 )/ p_denominator
             r = (TP[index] *2 ) / r_denominator
 
+    micro_avg_denominators.append(p_denominator)
+    micro_avg_numerators.append(TP[index] * 2)
     return precision,recall,p
 
 
@@ -233,9 +237,14 @@ print (recall)
 print ("Precision Recall Breakeven point: " )
 print (p)
 
+n_count = 0
+d_count = 0
+for i in range (0,10):
+    n_count += micro_avg_numerators[i]
+    d_count += micro_avg_denominators[i]
 
-
-
+print("MicroAVG: ")
+print(n_count/d_count)
 
 
 
