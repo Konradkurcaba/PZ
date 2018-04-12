@@ -1,4 +1,7 @@
+from string import digits
+
 import scipy
+import re
 from nltk.corpus import reuters
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -34,9 +37,20 @@ def target_matrix(docs_id):           #create target sparse matrix from given do
 def recall_precision(TP,FP,FN,index):
 
     precision = TP[index] / (TP[index] + FP[index])
+    p = precision
     recall = TP[index] / (TP[index] + FN[index])
+    r = recall
 
-    return precision,recall
+    if (precision > recall):
+        p_denominator = (TP[index] + FP[index]) *2
+        r_denominator = (TP[index] + FN[index] ) *2
+        while p != r:
+            p_denominator +=1
+            r_denominator -=1
+            p = (TP[index] *2 )/ p_denominator
+            r = (TP[index] *2 ) / r_denominator
+
+    return precision,recall,p
 
 
 documents = reuters.fileids()
@@ -49,13 +63,25 @@ train_docs_ids = [] #docs_id_array
 test_docs = []
 test_docs_ids = []
 
+
 for doc_id in reuters.fileids():
     if doc_id.startswith("train"):
-        train_docs.append(reuters.raw(doc_id)) #get train docs
+        string = reuters.raw(doc_id)
+        remove_digits = str.maketrans('', '', digits)
+        res = string.translate(remove_digits) # remove numbers
+        res = res.replace(",","") #remove dots
+        res = res.replace(".","") #remove commas
+        train_docs.append(res) #get train docs
         train_docs_ids.append(doc_id)   #get_id
+
     else:
-        test_docs.append(reuters.raw(doc_id)) #get test docs
-        test_docs_ids.append(doc_id) #get id
+        string = reuters.raw(doc_id)
+        remove_digits = str.maketrans('', '', digits)
+        res = string.translate(remove_digits)  # remove numbers
+        res = res.replace(",", "")  # remove dots
+        res = res.replace(".", "")  # remove commas
+        test_docs.append(res)  # get train docs
+        test_docs_ids.append(doc_id)  # get_id
 
 count_vect = CountVectorizer(stop_words="english") #use english stopwords
 dictionary = count_vect.fit_transform(train_docs) #create dictionary for train docs - sparse matrix
@@ -74,10 +100,21 @@ test_transformed_dict = tfidf_transformer.fit_transform(test_dictionary)
 train_target=target_matrix(train_docs_ids)
 test_target=target_matrix(test_docs_ids)
 
-clf = OneVsRestClassifier(LinearSVC(random_state=0)).fit(transformed_dict, train_target)
+
+clf = OneVsRestClassifier(LinearSVC(random_state=0))
+clf.fit(transformed_dict, train_target)
+
+
+
 #clf = OneVsRestClassifier(MultinomialNB()).fit(transformed_dict, train_target)
 
+#list = clf.estimators_
+#est0 = list[0]
+#est0.class_log_pior = np.array([1,0])
+
+
 results = clf.predict(test_transformed_dict) #predict results - sparse matrix
+
 
 
 
@@ -106,62 +143,101 @@ for i in range(0,3019):
             TN[j] +=1
 
 print("earn: ")
-precision,recall = recall_precision(TP,FP,FN,21)
+precision,recall,p = recall_precision(TP,FP,FN,21)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("acq: ")
-precision,recall = recall_precision(TP,FP,FN,0)
+precision,recall,p = recall_precision(TP,FP,FN,0)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("money-fx: ")
-precision,recall = recall_precision(TP,FP,FN,46)
+precision,recall,p = recall_precision(TP,FP,FN,46)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("grain: ")
-precision,recall = recall_precision(TP,FP,FN,26)
+precision,recall,p = recall_precision(TP,FP,FN,26)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("crude: ")
-precision,recall = recall_precision(TP,FP,FN,17)
+precision,recall,p = recall_precision(TP,FP,FN,17)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("trade: ")
-precision,recall = recall_precision(TP,FP,FN,84)
+precision,recall,p = recall_precision(TP,FP,FN,84)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("interest: ")
-precision,recall = recall_precision(TP,FP,FN,34)
+precision,recall,p = recall_precision(TP,FP,FN,34)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("ship: ")
-precision,recall = recall_precision(TP,FP,FN,71)
+precision,recall,p = recall_precision(TP,FP,FN,71)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 print("wheat: ")
-precision,recall = recall_precision(TP,FP,FN,86)
+precision,recall,p = recall_precision(TP,FP,FN,86)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 
 print("corn: ")
-precision,recall = recall_precision(TP,FP,FN,12)
+precision,recall,p = recall_precision(TP,FP,FN,12)
+print ("precision: ")
 print (precision)
+print ("recall: ")
 print (recall)
+print ("Precision Recall Breakeven point: " )
+print (p)
 
 
 
 
 
 
-print("dalej")
 
 
 #print("train end")
