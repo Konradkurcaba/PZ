@@ -1,15 +1,15 @@
-from string import digits
-
 import scipy
-import re
+import nltk
+nltk.download('reuters')
+from string import digits
 from nltk.corpus import reuters
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.metrics import precision_recall_fscore_support
 from sklearn.multiclass import OneVsRestClassifier
 import numpy as np
-from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import LinearSVC
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.naive_bayes import MultinomialNB
 
 def target_matrix(docs_id):           #create target sparse matrix from given docs_id
     iteration_counter = 0
@@ -34,28 +34,16 @@ def target_matrix(docs_id):           #create target sparse matrix from given do
     new_array = scipy.sparse.csr_matrix(target_array)  # create sparse array from dense array
     return new_array
 
-micro_avg_denominators = []
-micro_avg_numerators = []
-
+precision_avg = []
+recall_avg = []
 def recall_precision(TP,FP,FN,index):
 
     precision = TP[index] / (TP[index] + FP[index])
-    p = precision
     recall = TP[index] / (TP[index] + FN[index])
-    r = recall
-    if (precision > recall):
-        p_denominator = (TP[index] + FP[index]) *2  #save precision denominator
-        r_denominator = (TP[index] + FN[index] ) *2 #save recall denominator
-        while p != r:
-            p_denominator +=1
-            r_denominator -=1
-            p = (TP[index] *2 )/ p_denominator
-            r = (TP[index] *2 ) / r_denominator
+    precision_avg.append(precision)
+    recall_avg.append(recall)
 
-    micro_avg_denominators.append(p_denominator)
-    micro_avg_numerators.append(TP[index] * 2)
-    return precision,recall,p
-
+    return precision,recall
 
 documents = reuters.fileids()
 
@@ -100,39 +88,27 @@ test_transformed_dict = tfidf_transformer.fit_transform(test_dictionary)
 #tf(t) = term_frequency/all_terms in given document
 #idf(d, t) = log [ (1 + n) / (1 + df(d, t)) ] + 1      // df(d,t) number of documents contain term t
 
-
 train_target=target_matrix(train_docs_ids)
 test_target=target_matrix(test_docs_ids)
 
-
-clf = OneVsRestClassifier(LinearSVC(random_state=0))
+#clf = OneVsRestClassifier(LinearSVC(random_state=0))
+clf = OneVsRestClassifier(AdaBoostClassifier(MultinomialNB(alpha=0.05),n_estimators=100))
+#clf = OneVsRestClassifier(MultinomialNB(alpha=0.05))
 clf.fit(transformed_dict, train_target)
-
-
-
-#clf = OneVsRestClassifier(MultinomialNB()).fit(transformed_dict, train_target)
-
-#list = clf.estimators_
-#est0 = list[0]
-#est0.class_log_pior = np.array([1,0])
-
 
 results = clf.predict(test_transformed_dict) #predict results - sparse matrix
 
-
-
-
-
+print(results.shape)
 
 TP = np.zeros(90,dtype=np.int) #array with True positive values for each class
 FP = np.zeros(90,dtype=np.int) #array with False positive values for each class
 FN = np.zeros(90,dtype=np.int) #array with False negative values for each class
 TN = np.zeros(90,dtype=np.int) #array with True negative values for each class
 
-
 for i in range(0,3019):
     result_row = results.getrow(i).toarray()  #one row from result matrix
     test_target_row = test_target.getrow(i).toarray() #one row from target matrix
+
     for j in range(0,90):
         result = np.take(result_row,j)  #value with index j
         target = np.take(test_target_row,j) #value with index j
@@ -147,109 +123,87 @@ for i in range(0,3019):
             TN[j] +=1
 
 print("earn: ")
-precision,recall,p = recall_precision(TP,FP,FN,21)
+precision,recall = recall_precision(TP,FP,FN,21)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("acq: ")
-precision,recall,p = recall_precision(TP,FP,FN,0)
+precision,recall = recall_precision(TP,FP,FN,0)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("money-fx: ")
-precision,recall,p = recall_precision(TP,FP,FN,46)
+precision,recall = recall_precision(TP,FP,FN,46)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("grain: ")
-precision,recall,p = recall_precision(TP,FP,FN,26)
+precision,recall = recall_precision(TP,FP,FN,26)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("crude: ")
-precision,recall,p = recall_precision(TP,FP,FN,17)
+precision,recall = recall_precision(TP,FP,FN,17)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("trade: ")
-precision,recall,p = recall_precision(TP,FP,FN,84)
+precision,recall = recall_precision(TP,FP,FN,84)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("interest: ")
-precision,recall,p = recall_precision(TP,FP,FN,34)
+precision,recall = recall_precision(TP,FP,FN,34)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("ship: ")
-precision,recall,p = recall_precision(TP,FP,FN,71)
+precision,recall = recall_precision(TP,FP,FN,71)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 print("wheat: ")
-precision,recall,p = recall_precision(TP,FP,FN,86)
+precision,recall = recall_precision(TP,FP,FN,86)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
+
 
 
 print("corn: ")
-precision,recall,p = recall_precision(TP,FP,FN,12)
+precision,recall = recall_precision(TP,FP,FN,12)
 print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("Precision Recall Breakeven point: " )
-print (p)
-
-n_count = 0
-d_count = 0
-for i in range (0,10):
-    n_count += micro_avg_numerators[i]
-    d_count += micro_avg_denominators[i]
-
-print("MicroAVG: ")
-print(n_count/d_count)
 
 
-
-
-#print("train end")
-#print("score:")
-#print(clf.score(test_transformed_dict, test_target))
-
+print("Precision AVG:")
+print(sum(precision_avg) / len(precision_avg ))
+print("Recall AVG:")
+print(sum(recall_avg) / len(recall_avg))
