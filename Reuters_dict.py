@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.multiclass import OneVsRestClassifier
 import numpy as np
-from sklearn.svm import LinearSVC
+from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.naive_bayes import MultinomialNB
 
@@ -91,9 +91,12 @@ test_transformed_dict = tfidf_transformer.fit_transform(test_dictionary)
 train_target=target_matrix(train_docs_ids)
 test_target=target_matrix(test_docs_ids)
 
-#clf = OneVsRestClassifier(LinearSVC(random_state=0))
-clf = OneVsRestClassifier(AdaBoostClassifier(MultinomialNB(alpha=0.05),n_estimators=100))
-#clf = OneVsRestClassifier(MultinomialNB(alpha=0.05))
+#clf = OneVsRestClassifier(LinearSVC(random_state=0)) #Linear Support Vector Classification.
+#clf = OneVsRestClassifier(AdaBoostClassifier(MultinomialNB(alpha=0.05),n_estimators=100)) #Naive Bayes with AdaBoost
+#clf = OneVsRestClassifier(MultinomialNB(alpha=0.05)) #Naive Bayes
+#clf = OneVsRestClassifier(SVC(probability=True, kernel='linear')) # C-Support Vector Classification.
+clf = OneVsRestClassifier(AdaBoostClassifier(SVC(probability=True, kernel='linear'),n_estimators=25 ))
+
 clf.fit(transformed_dict, train_target)
 
 results = clf.predict(test_transformed_dict) #predict results - sparse matrix
