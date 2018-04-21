@@ -1,5 +1,7 @@
 import scipy
 import nltk
+from sklearn.metrics import precision_score, recall_score
+
 nltk.download('reuters')
 from string import digits
 from nltk.corpus import reuters
@@ -10,6 +12,9 @@ import numpy as np
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.naive_bayes import MultinomialNB
+from scipy import stats
+import matplotlib.pyplot as plt
+
 
 def target_matrix(docs_id):           #create target sparse matrix from given docs_id
     iteration_counter = 0
@@ -32,7 +37,7 @@ def target_matrix(docs_id):           #create target sparse matrix from given do
 
 
     new_array = scipy.sparse.csr_matrix(target_array)  # create sparse array from dense array
-    return new_array
+    return new_array, target_array
 
 precision_avg = []
 recall_avg = []
@@ -44,6 +49,43 @@ def recall_precision(TP,FP,FN,index):
     recall_avg.append(recall)
 
     return precision,recall
+
+
+
+
+def breakEvenPoint(classNumber, all_probability_matrix, dense_target_matrix):
+    resultForOneCategory = []
+    targetResultForOneCategory = []
+    for i in range(0, 3019):
+        resultForOneCategory.append(all_probability_matrix[i, classNumber])
+        targetResultForOneCategory.append(dense_target_matrix[i,classNumber])
+    precision_list = [] #for threshold from 0.0  to 1.0
+    recall_list = []    #for threshold from 0.0  to 1.0
+    result_list = []    #for threshold from 0.0  to 1.0
+    p = 0.0
+
+    for i in range(0, 100):
+
+        for j in range(0, 3019):
+
+            if resultForOneCategory[j] > p: #if probability is bigger than threshold
+                result_list.append(1)
+            else:
+                result_list.append(0)       #if isn't
+        precision_list.append(precision_score(result_list, targetResultForOneCategory))
+        recall_list.append(recall_score(result_list, targetResultForOneCategory))
+        result_list.clear()
+        p = p + 0.01
+
+    for i in range(0, 100):
+        prec = round(precision_list[i],3)
+        if round(precision_list[i],3) == round(recall_list[i],3):
+            return (round(precision_list[i],3))
+
+
+
+
+
 
 documents = reuters.fileids()
 
@@ -88,20 +130,24 @@ test_transformed_dict = tfidf_transformer.fit_transform(test_dictionary)
 #tf(t) = term_frequency/all_terms in given document
 #idf(d, t) = log [ (1 + n) / (1 + df(d, t)) ] + 1      // df(d,t) number of documents contain term t
 
-train_target=target_matrix(train_docs_ids)
-test_target=target_matrix(test_docs_ids)
+train_target, xd = target_matrix(train_docs_ids)
+test_target, dense_test_target = target_matrix(test_docs_ids)
 
 #clf = OneVsRestClassifier(LinearSVC(random_state=0)) #Linear Support Vector Classification.
 #clf = OneVsRestClassifier(AdaBoostClassifier(MultinomialNB(alpha=0.05),n_estimators=100)) #Naive Bayes with AdaBoost
-#clf = OneVsRestClassifier(MultinomialNB(alpha=0.05)) #Naive Bayes
+clf = OneVsRestClassifier(MultinomialNB(alpha=0.05)) #Naive Bayes
 #clf = OneVsRestClassifier(SVC(probability=True, kernel='linear')) # C-Support Vector Classification.
-clf = OneVsRestClassifier(AdaBoostClassifier(SVC(probability=True, kernel='linear'),n_estimators=25 ))
+#clf = OneVsRestClassifier(AdaBoostClassifier(SVC(probability=True, kernel='linear'),n_estimators=25 ))
 
 clf.fit(transformed_dict, train_target)
 
 results = clf.predict(test_transformed_dict) #predict results - sparse matrix
 
-print(results.shape)
+
+all_propability_matrix = clf.predict_proba(test_transformed_dict);
+
+
+
 
 TP = np.zeros(90,dtype=np.int) #array with True positive values for each class
 FP = np.zeros(90,dtype=np.int) #array with False positive values for each class
@@ -131,7 +177,8 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(21,all_propability_matrix,dense_test_target))
 
 print("acq: ")
 precision,recall = recall_precision(TP,FP,FN,0)
