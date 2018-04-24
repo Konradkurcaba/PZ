@@ -14,6 +14,10 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.naive_bayes import MultinomialNB
 from scipy import stats
 import matplotlib.pyplot as plt
+from numpy import loadtxt
+from xgboost import XGBClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 
 def target_matrix(docs_id):           #create target sparse matrix from given docs_id
@@ -45,8 +49,10 @@ def recall_precision(TP,FP,FN,index):
 
     precision = TP[index] / (TP[index] + FP[index])
     recall = TP[index] / (TP[index] + FN[index])
+
     precision_avg.append(precision)
     recall_avg.append(recall)
+    thefile = open("cat" + str(index) + ".txt", "w+")
 
     return precision,recall
 
@@ -59,12 +65,14 @@ def breakEvenPoint(classNumber, all_probability_matrix, dense_target_matrix):
     for i in range(0, 3019):
         resultForOneCategory.append(all_probability_matrix[i, classNumber])
         targetResultForOneCategory.append(dense_target_matrix[i,classNumber])
+
+
     precision_list = [] #for threshold from 0.0  to 1.0
     recall_list = []    #for threshold from 0.0  to 1.0
     result_list = []    #for threshold from 0.0  to 1.0
     p = 0.0
 
-    for i in range(0, 100):
+    for i in range(0, 10000):
 
         for j in range(0, 3019):
 
@@ -75,12 +83,12 @@ def breakEvenPoint(classNumber, all_probability_matrix, dense_target_matrix):
         precision_list.append(precision_score(result_list, targetResultForOneCategory))
         recall_list.append(recall_score(result_list, targetResultForOneCategory))
         result_list.clear()
-        p = p + 0.01
+        p = p + 0.0001
 
-    for i in range(0, 100):
-        prec = round(precision_list[i],3)
-        if round(precision_list[i],3) == round(recall_list[i],3):
-            return (round(precision_list[i],3))
+    for i in range(0, 10000):
+
+        if round(precision_list[i],4) == round(recall_list[i],4):
+            return (round(precision_list[i],4))
 
 
 
@@ -133,12 +141,21 @@ test_transformed_dict = tfidf_transformer.fit_transform(test_dictionary)
 train_target, xd = target_matrix(train_docs_ids)
 test_target, dense_test_target = target_matrix(test_docs_ids)
 
+######################################################################################################
+
+
+
+
 #clf = OneVsRestClassifier(LinearSVC(random_state=0)) #Linear Support Vector Classification.
 #clf = OneVsRestClassifier(AdaBoostClassifier(MultinomialNB(alpha=0.05),n_estimators=100)) #Naive Bayes with AdaBoost
-clf = OneVsRestClassifier(MultinomialNB(alpha=0.05)) #Naive Bayes
+#clf = OneVsRestClassifier(MultinomialNB(alpha=0.05)) #Naive Bayes
 #clf = OneVsRestClassifier(SVC(probability=True, kernel='linear')) # C-Support Vector Classification.
 #clf = OneVsRestClassifier(AdaBoostClassifier(SVC(probability=True, kernel='linear'),n_estimators=25 ))
 
+clf = OneVsRestClassifier(XGBClassifier())
+
+
+######################################################################################################
 clf.fit(transformed_dict, train_target)
 
 results = clf.predict(test_transformed_dict) #predict results - sparse matrix
@@ -177,8 +194,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-print ("break even point:")
-print (breakEvenPoint(21,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[21])+" TN"+str(TN[21])+" FN"+str(FN[21])+"FP"+str(FP[21]))
+#print ("break even point:")
+#print (breakEvenPoint(21,all_propability_matrix,dense_test_target))
 
 print("acq: ")
 precision,recall = recall_precision(TP,FP,FN,0)
@@ -186,6 +204,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
+print ("break even point:")
+print (breakEvenPoint(0,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[0])+" TN"+str(TN[0])+" FN"+str(FN[0])+" FP"+str(FP[0]))
 
 
 print("money-fx: ")
@@ -194,7 +215,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(46,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[46])+" TN"+str(TN[46])+" FN"+str(FN[46])+" FP"+str(FP[46]))
 
 print("grain: ")
 precision,recall = recall_precision(TP,FP,FN,26)
@@ -202,7 +225,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(26,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[26])+" TN"+str(TN[26])+" FN"+str(FN[26])+" FP"+str(FP[26]))
 
 print("crude: ")
 precision,recall = recall_precision(TP,FP,FN,17)
@@ -210,6 +235,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
+print ("break even point:")
+print (breakEvenPoint(17,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[17])+" TN"+str(TN[17])+" FN"+str(FN[17])+" FP"+str(FP[17]))
 
 
 print("trade: ")
@@ -218,7 +246,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(84,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[84])+" TN"+str(TN[84])+" FN"+str(FN[84])+" FP"+str(FP[84]))
 
 print("interest: ")
 precision,recall = recall_precision(TP,FP,FN,34)
@@ -226,7 +256,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(34,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[34])+" TN"+str(TN[34])+" FN"+str(FN[34])+" FP"+str(FP[34]))
 
 print("ship: ")
 precision,recall = recall_precision(TP,FP,FN,71)
@@ -234,7 +266,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(71,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[71])+" TN"+str(TN[71])+" FN"+str(FN[71])+" FP"+str(FP[71]))
 
 print("wheat: ")
 precision,recall = recall_precision(TP,FP,FN,86)
@@ -242,7 +276,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(86,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[86])+" TN"+str(TN[86])+" FN"+str(FN[86])+" FP"+str(FP[86]))
 
 
 print("corn: ")
@@ -251,7 +287,9 @@ print ("precision: ")
 print (precision)
 print ("recall: ")
 print (recall)
-
+print ("break even point:")
+print (breakEvenPoint(12,all_propability_matrix,dense_test_target))
+print("TP"+str(TP[12])+" TN"+str(TN[12])+" FN"+str(FN[12])+" FP"+str(FP[12]))
 
 print("Precision AVG:")
 print(sum(precision_avg) / len(precision_avg ))
