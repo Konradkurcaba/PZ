@@ -11,7 +11,7 @@ from sklearn.multiclass import OneVsRestClassifier
 import numpy as np
 from sklearn.svm import LinearSVC, SVC
 from sklearn.ensemble import AdaBoostClassifier
-from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import MultinomialNB, GaussianNB
 from scipy import stats
 import matplotlib.pyplot as plt
 from numpy import loadtxt
@@ -43,16 +43,19 @@ def target_matrix(docs_id):           #create target sparse matrix from given do
     new_array = scipy.sparse.csr_matrix(target_array)  # create sparse array from dense array
     return new_array, target_array
 
-precision_avg = []
-recall_avg = []
+precision_avg_numerator = []
+precision_avg_denominator = []
+recall_avg_numerator = []
+recall_avg_denominator = []
 def recall_precision(TP,FP,FN,index):
 
     precision = TP[index] / (TP[index] + FP[index])
     recall = TP[index] / (TP[index] + FN[index])
 
-    precision_avg.append(precision)
-    recall_avg.append(recall)
-    thefile = open("cat" + str(index) + ".txt", "w+")
+    precision_avg_numerator.append(TP[index])
+    precision_avg_denominator.append(TP[index] + FP[index])
+    recall_avg_numerator.append(TP[index])
+    recall_avg_denominator.append(TP[index] + FN[index])
 
     return precision,recall
 
@@ -152,18 +155,22 @@ test_target, dense_test_target = target_matrix(test_docs_ids)
 #clf = OneVsRestClassifier(SVC(probability=True, kernel='linear')) # C-Support Vector Classification.
 #clf = OneVsRestClassifier(AdaBoostClassifier(SVC(probability=True, kernel='linear'),n_estimators=25 ))
 
-clf = OneVsRestClassifier(XGBClassifier())
+#clf = OneVsRestClassifier(XGBClassifier())
+
+clf = OneVsRestClassifier(GaussianNB())
+
 
 
 ######################################################################################################
-clf.fit(transformed_dict, train_target)
+clf.fit(transformed_dict.todense(), train_target.todense())
 
-results = clf.predict(test_transformed_dict) #predict results - sparse matrix
+results = clf.predict(test_transformed_dict.todense()) #predict results - sparse matrix
 
+results = scipy.sparse.csr_matrix(results)
 
-all_propability_matrix = clf.predict_proba(test_transformed_dict);
+all_propability_matrix = clf.predict_proba(test_transformed_dict.todense());
 
-
+all_propability_matrix = scipy.sparse.csr_matrix(all_propability_matrix)
 
 
 TP = np.zeros(90,dtype=np.int) #array with True positive values for each class
@@ -195,8 +202,8 @@ print (precision)
 print ("recall: ")
 print (recall)
 print("TP"+str(TP[21])+" TN"+str(TN[21])+" FN"+str(FN[21])+"FP"+str(FP[21]))
-#print ("break even point:")
-#print (breakEvenPoint(21,all_propability_matrix,dense_test_target))
+print ("break even point:")
+print (breakEvenPoint(21,all_propability_matrix,dense_test_target))
 
 print("acq: ")
 precision,recall = recall_precision(TP,FP,FN,0)
@@ -291,7 +298,7 @@ print ("break even point:")
 print (breakEvenPoint(12,all_propability_matrix,dense_test_target))
 print("TP"+str(TP[12])+" TN"+str(TN[12])+" FN"+str(FN[12])+" FP"+str(FP[12]))
 
-print("Precision AVG:")
-print(sum(precision_avg) / len(precision_avg ))
-print("Recall AVG:")
-print(sum(recall_avg) / len(recall_avg))
+print("Precision micro AVG:")
+print(sum(precision_avg_numerator) / sum(precision_avg_denominator ))
+print("Recall micro AVG:")
+print(sum(recall_avg_numerator) / sum(recall_avg_denominator))
